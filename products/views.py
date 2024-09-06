@@ -1,4 +1,4 @@
-from rest_framework import generics
+from rest_framework import generics, permissions
 from .serializers import ComputerSerializer
 
 from .models import Computer
