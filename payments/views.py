@@ -8,7 +8,6 @@ from rest_framework import status
 from products.models import Computer
 from decouple import config
 
-
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
 class StripeCheckoutView(APIView):
@@ -20,6 +19,9 @@ class StripeCheckoutView(APIView):
                 return Response({'error': 'No computer_id provided'}, status=status.HTTP_400_BAD_REQUEST)
             
             computer = Computer.objects.get(id=computer_id)
+
+            if computer.quantity < 1:
+                return Response({'error': 'Computer out of stock'}, status=status.HTTP_400_BAD_REQUEST)
 
             session = stripe.checkout.Session.create(
                 line_items=[
@@ -48,8 +50,6 @@ class StripeCheckoutView(APIView):
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-
-
 @csrf_exempt
 def stripe_webhook(request):
     payload = request.body
@@ -74,7 +74,11 @@ def stripe_webhook(request):
         
         try:
             computer = Computer.objects.get(id=computer_id)
-            computer.delete()
+            if computer.quantity > 0:
+                computer.quantity -= 1
+                computer.save()
+            else:
+                return JsonResponse({'error': 'Computer out of stock'}, status=400)
         except Computer.DoesNotExist:
             return JsonResponse({'error': 'Computer not found'}, status=404)
 

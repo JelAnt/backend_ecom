@@ -2,7 +2,7 @@ from django.contrib import admin
 from .models import Computer, Category
 
 class ComputerAdmin(admin.ModelAdmin):
-    list_display = ('model', 'category', 'cpu', 'price')
+    list_display = ('model', 'category', 'cpu', 'price', 'id')
     search_fields = ('model', 'category__name', 'cpu')
     list_filter = ('category', 'price')
 
